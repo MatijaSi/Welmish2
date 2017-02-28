@@ -19,9 +19,112 @@
    (image :reader   image
 	  :initarg :image)))
 
+(defclass map-tile ((tile))
+  ((blocked? :reader blocked?
+	     :initarg :blocked?)))
+
 (defmethod draw ((tile tile))
   "Draw tile to *standard-window*"
   (io:draw-char (image tile) (x tile) (y tile)))
+
+(defclass map ()
+  ((grid    :initarg :grid
+	    :accessor grid)
+   (rows    :initarg :rows
+	    :reader   rows)
+   (columns :initarg :columns
+	    :reader   columns)))
+
+(defun map-new (rows columns)
+  "Return rows x columns map"
+  (let* ((map (make-instance 'map :rows rows :columns columns))
+	 (array (make-array (list rows columns) :initial-element 0)))
+    (setf (grid map) array)
+    (grid-map-coordinated #'(lambda (a row column)
+			      (make-instance 'map-tile
+					     :x row
+					     :y column
+					     :blocked? nil)) grid)))
+
+(defun map-make (rows columns array)
+  "Return map with grid equal to array"
+  (make-instance 'map :rows rows :columns columns :grid array))
+
+(defmethod map-map (fun (map map))
+  "Apply fun to all elements of map and collect them in new map"
+  (let* ((rows (rows map))
+	 (columns (columns map))
+	 (result-array (make-array (list rows columns)))
+	 (array (grid map)))
+    (do ((row 0 (+ row 1)))
+	((= row rows) (map-make rows columns result-array))
+      (do ((column 0 (+ column 1)))
+	  ((= column columns) nil)
+	(setf (aref result-array row column)
+	      (funcall fun (aref array row column)))))))
+
+(defmethod map-map-coordinated (fun (map map))
+  "Apply fun to all elements of map and collect them in new map.
+Fun must take three arguments, first one element, second row and third column."
+  (let* ((rows (rows map))
+	 (columns (columns map))
+	 (result-array (make-array (list rows columns)))
+	 (array (grid map)))
+    (do ((row 0 (+ row 1)))
+	((= row rows) (map-make rows columns result-array))
+      (do ((column 0 (+ column 1)))
+	  ((= column columns) nil)
+	(setf (aref result-array row column)
+	      (funcall fun (aref array row column) row column))))))
+
+(defmethod map-get (x y (map map))
+  "Get x,y cell of grid"
+  (aref (grid map) x y))
+
+(defmethod map-row (x (map map))
+  "Return all cells with x"
+  (let ((limit (columns map))
+	(list '()))
+    (do ((y 0 (+ y 1)))
+	((= y limit) (reverse list))
+      (push (map-get x y map) list))))
+
+(defmethod map-rows ((map map))
+  "Return list of rows"
+  (let ((limit (rows map))
+	(result '()))
+    (do ((x 0 (+ x 1)))
+	((= x limit) (reverse result))
+      (push (map-row x map) result))))
+
+(defmethod map-column (y (map map))
+  "Return all cells with y"
+  (let ((limit (rows map))
+	(list '()))
+    (do ((x 0 (+ x 1)))
+	((= x limit) list)
+      (push (map-get x y map) list))))
+
+(defmethod map-all ((map map))
+  "Return all cells of map"
+  (let ((rows (rows map))
+	(columns (columns map))
+	(list '()))
+    (do ((x 0 (+ x 1)))
+	((= x rows) list)
+      (do ((y 0 (+ y 1)))
+	  ((= y columns) nil)
+	(push (map-get x y map) list)))))
+
+(defmethod map-random ((map map))
+  "Return random cell from map"
+  (let ((y (random (columns map)))
+	(x (random (rows map))))
+    (map-get x y grid)))
+
+(defmethod map-surface ((map map))
+  "Return rows * columns of map"
+  (* (rows map) (columns map)))
 
 (defclass mover (tile)
   ((x :accessor x
