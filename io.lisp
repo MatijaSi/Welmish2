@@ -1,6 +1,10 @@
 (defpackage io
   (:use :cl :iterate)
-  (:export draw-char
+  (:export standard-window
+	   new-window
+	   remove-window
+
+	   draw-char
 	   draw-string
 
 	   with-colour
@@ -15,17 +19,32 @@
 
 (in-package io)
 
+;;; Windows
+
+;; Default window
+(defun standard-window ()
+  "Return standard window"
+  charms:*standard-window*)
+
+(defun new-window (x y h w)
+  "Make a new window wide w, high h, with top left corner in x,y"
+  (charms:make-window w h x y))
+
+(defun remove-window (window)
+  "Delete window"
+  (charms:destroy-window window))
+
 ;;; Output
 
-(defun draw-char (char x y)
+(defun draw-char (char x y &optional (window charms:*standard-window*))
   "Put char to *standard-window* at coordinates x and y"
-  (charms:move-cursor charms:*standard-window* x y)
-  (charms:write-char-at-cursor charms:*standard-window* char))
+  (charms:move-cursor window x y)
+  (charms:write-char-at-cursor window char))
 
-(defun draw-string (str x y)
+(defun draw-string (str x y &optional (window charms:*standard-window*))
   "Put string to *standard-window* at coordinates x and y"
-  (charms:move-cursor charms:*standard-window* x y)
-  (charms:write-string-at-cursor charms:*standard-window* str)
+  (charms:move-cursor window x y)
+  (charms:write-string-at-cursor window str)
   (refresh))
 
 ;;; Coloring output (DOES NOT WORK)
@@ -41,17 +60,17 @@
 
 ;;; Window handling
 
-(defun clear ()
-  (charms:clear-window charms:*standard-window*))
+(defun clear (&optional (window charms:*standard-window*))
+  (charms:clear-window window))
 
-(defun refresh ()
-  (charms:refresh-window charms:*standard-window*))
+(defun refresh (&optional (window charms:*standard-window*))
+  (charms:refresh-window window))
 
 ;;; Input
 
-(defun get-char ()
+(defun get-char (&optional (window charms:*standard-window*))
   "Get char from input"
-  (charms:get-char charms:*standard-window*))
+  (charms:get-char window))
 
 ;;; Initialization and deinitialization
 
