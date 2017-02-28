@@ -36,15 +36,27 @@
 
 (defclass player (mover) ())
 
+(defmethod curse ((player player))
+  (io:draw-string "Woundikins!!!" 0 1)
+  (io:refresh))
+
 (defmethod control ((player player))
   "Control player by keyboard"
-  (let ((quit? nil)
+  (let ((status :continue)
 	(x-mod 0)
 	(y-mod 0))
     (case (io:get-char)
       ;; Quit game
-      ((#\Q #\q) (setf quit? t))
+      ((#\Q #\q) (setf status :quit))
 
+      ;; Display help
+      ((#\H)     (setf status :help))
+
+      ;; Test command for repeat -- curse command
+      ((#\c)     (progn
+		   (curse player)
+		   (setf status :repeat)))
+	
       ;; Movement keys
       ((#\h)     (decf x-mod))
       ((#\j)     (incf y-mod))
@@ -61,4 +73,4 @@
       ((#\n)     (progn (incf x-mod)
 			(incf y-mod))))
     (move player x-mod y-mod)
-    quit?))
+    status))
