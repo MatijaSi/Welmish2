@@ -19,14 +19,15 @@
    (image :reader   image
 	  :initarg :image)))
 
+#|
 (defclass map-tile ((tile))
   ((blocked? :reader blocked?
 	     :initarg :blocked?)))
-
+|#
 (defmethod draw ((tile tile))
   "Draw tile to *standard-window*"
   (io:draw-char (image tile) (x tile) (y tile)))
-
+#|
 (defclass map ()
   ((grid    :initarg :grid
 	    :accessor grid)
@@ -125,6 +126,7 @@ Fun must take three arguments, first one element, second row and third column."
 (defmethod map-surface ((map map))
   "Return rows * columns of map"
   (* (rows map) (columns map)))
+|#
 
 (defclass mover (tile)
   ((x :accessor x
@@ -139,6 +141,32 @@ Fun must take three arguments, first one element, second row and third column."
 
 (defclass player (mover) ())
 
+(defmethod char->move ((player player) char)
+  "Call move on player by appropriate x-mod, y-mod"
+  (let ((x-mod 0)
+	(y-mod 0))
+    
+    (case char
+      ((#\h)     (decf x-mod)) ; left
+      ((#\j)     (incf y-mod)) ; down
+      ((#\k)     (decf y-mod)) ; up
+      ((#\l)     (incf x-mod)) ; right
+      
+      
+      ((#\z #\y) (progn (decf x-mod) ;   left
+			(decf y-mod))) ; up
+      
+      ((#\b)     (progn (decf x-mod) ;   left
+			(incf y-mod))) ; down
+      
+      ((#\u)     (progn (incf x-mod)   ; right
+			(decf y-mod))) ; up
+      
+      ((#\n)     (progn (incf x-mod)   ; right
+			(incf y-mod)))); up
+    
+    (move player x-mod y-mod)))
+
 (defmethod curse ((player player))
   (io:draw-string "Woundikins!!!" 0 1)
   (io:refresh))
@@ -146,34 +174,19 @@ Fun must take three arguments, first one element, second row and third column."
 (defmethod control ((player player))
   "Control player by keyboard"
   (let ((status :continue)
-	(x-mod 0)
-	(y-mod 0))
-    (case (io:get-char)
+	(ch (io:get-char)))
+    (case ch
       ;; Quit game
       ((#\Q #\q) (setf status :quit))
-
+      
       ;; Display help
       ((#\H)     (setf status :help))
-
+      
       ;; Test command for repeat -- curse command
       ((#\c)     (progn
 		   (curse player)
 		   (setf status :repeat)))
-	
-      ;; Movement keys
-      ((#\h)     (decf x-mod))
-      ((#\j)     (incf y-mod))
-      ((#\k)     (decf y-mod))
-      ((#\l)     (incf x-mod))
 
-      ;; Diagonal movement
-      ((#\z #\y) (progn (decf x-mod)
-			(decf y-mod)))
-      ((#\b)     (progn (decf x-mod)
-			(incf y-mod)))
-      ((#\u)     (progn (incf x-mod)
-			(decf y-mod)))
-      ((#\n)     (progn (incf x-mod)
-			(incf y-mod))))
-    (move player x-mod y-mod)
+      ;; Movement
+      ((#\h #\j #\l #\k #\z #\y #\u #\n #\b) (char->move player ch)))
     status))
