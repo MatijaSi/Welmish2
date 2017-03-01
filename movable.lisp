@@ -5,7 +5,7 @@
 
 (in-package movable)
 
-(defclass mover (tile)
+(defclass mover (drawable:tile)
   ((x :accessor x
       :initarg :x)
    (y :accessor y
@@ -15,6 +15,6 @@
   "Move mover for x-mod in x and for y-mod in y"
   (let ((new-x (+ (x mover) x-mod))
 	(new-y (+ (y mover) y-mod)))
-    (unless (blocked? (get-tile level new-x new-y))
+    (unless (blocked? (level:get-tile level new-x new-y))
       (setf (x mover) new-x)
       (setf (y mover) new-y))))

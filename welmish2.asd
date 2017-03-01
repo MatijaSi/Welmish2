@@ -10,6 +10,10 @@
     :serial t
 
     :components ((:file "io")
-		 (:file "models")
+		 (:file "drawable")
+		 (:file "level")
+		 (:file "level-generators")
+		 (:file "movable")
+		 (:file "player")
 		 (:file "logic")
 		 (:file "welmish")))

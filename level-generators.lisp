@@ -7,7 +7,7 @@
 
 (defun simple-level-metagenerator (tile-generator width height)
   "A workhorse for simple level generators"
-  (let ((level (make-instance 'level
+  (let ((level (make-instance 'level:level
 			      :w width
 			      :h height
 			      :grid (make-array (list width height)
@@ -20,7 +20,7 @@
 
 (defun empty-level-generate (width height)
   "A level composed of ground tiles"
-  (simple-level-metagenerator #'(lambda (x y) (make-ground-tile x y))
+  (simple-level-metagenerator #'(lambda (x y) (level:make-ground-tile x y))
 			      width
 			      height))
 
@@ -28,27 +28,27 @@
   "A level composed of ground and wall tiles randomly intermixed"
   (impassable-border-generate (simple-level-metagenerator #'(lambda (x y)
 							      (if (> (random 2) 0)
-								  (make-ground-tile x y)
-								  (make-wall-tile x y)))
+								  (level:make-ground-tile x y)
+								  (level:make-wall-tile x y)))
 							  width
 							  height)))
 
-(defmethod impassable-border-generate ((level level))
+(defmethod impassable-border-generate ((level level:level))
   "Add walls to level border"
-  (map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
-					      (make-wall-tile x y)))
-			level
+  (level:map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						    (make-wall-tile x y)))
+			      level
+			      0)
+  (level:map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						    (make-wall-tile x y)))
+			      level
+			      (- (height level) 1))
+  (level:map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						       (make-wall-tile x y)))
+				 level
 			0)
-  (map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
-					      (make-wall-tile x y)))
-			level
-			(- (height level) 1))
-  (map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						 (make-wall-tile x y)))
-			   level
-			0)
-  (map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						 (make-wall-tile x y)))
-			   level
-			   (- (width level) 1))
+  (level:map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						       (make-wall-tile x y)))
+				 level
+				 (- (width level) 1))
   level)

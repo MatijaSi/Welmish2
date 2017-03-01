@@ -5,7 +5,7 @@
 
 (in-package player)
 
-(defclass player (mover) ())
+(defclass player (movable:mover) ())
 
 (defmethod char->move ((player player) char level)
   "Call move on player by appropriate x-mod, y-mod"
@@ -31,7 +31,7 @@
       ((#\n)     (progn (incf x-mod)   ; right
 			(incf y-mod)))); up
     
-    (move player x-mod y-mod level)))
+    (movable:move player x-mod y-mod level)))
 
 (defmethod curse ((player player))
   (io:draw-string "Woundikins!!!" 0 1)

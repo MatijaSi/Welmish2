@@ -2,6 +2,8 @@
   (:use :cl)
   (:export level
 	   level-tile
+
+	   draw
 	   
 	   make-ground-tile
 	   make-wall-tile
@@ -19,7 +21,7 @@
 
 (in-package level)
 
-(defclass level-tile (tile)
+(defclass level-tile (drawable:tile)
   ((blocked? :reader   blocked?
 	     :initarg :blocked?)))
 
@@ -82,5 +84,5 @@
   (aref (grid level) x y))
 
 (defmethod draw ((level level) &optional (offset (cons 0 0)))
-  (map-level #'(lambda (tile) (draw tile offset)) level))
+  (map-level #'(lambda (tile) (drawable:draw tile offset)) level))
 

@@ -8,12 +8,12 @@
 
 ;;; Test data
 (defvar turn 0)
-(defvar player (make-instance 'models:player :x 5 :y 5 :image #\@))
-(defvar level (models:random-level-generate 40 15))
+(defvar player (make-instance 'player:player :x 5 :y 5 :image #\@))
+(defvar level (level-generators:random-level-generate 40 15))
 (defvar level-offset (io:new-offset 0 2))
 
 (defun interact-state ()
-  (case (models:control player level)
+  (case (player:control player level)
     ((:quit)     (exit-state))
     ((:help)     (help-state))
     ((:repeat)   (interact-state))
@@ -43,8 +43,8 @@
 
 (defun draw-state ()
   (io:clear)
-  (models:draw level level-offset)
-  (models:draw player level-offset)
+  (level:draw level level-offset)
+  (drawable:draw player level-offset)
   (io:draw-string (format nil "Turn: ~A" turn) 0 0)
   (io:refresh)
   (interact-state))
