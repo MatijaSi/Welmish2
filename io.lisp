@@ -3,10 +3,7 @@
   (:export draw-char
 	   draw-string
 
-	   new-offset
-
 	   with-colour
-	   +yellow-on-black+
        
 	   clear
 	   refresh
@@ -17,23 +14,20 @@
 
 (in-package io)
 
-;;; Offsetted output
-(defun new-offset (x y) (cons x y))
-
 ;;; Output
 
-(defun draw-char (char x y &optional (offset (cons 0 0)))
+(defun draw-char (char x y)
   "Put char to *standard-window* at coordinates x and y"
   (charms:move-cursor charms:*standard-window*
-		      (+ x (car offset))
-		      (+ y (cdr offset)))
+		      x
+		      y)
   (charms:write-char-at-cursor charms:*standard-window* char))
 
-(defun draw-string (str x y &optional (offset (cons 0 0)))
+(defun draw-string (str x y)
   "Put string to *standard-window* at coordinates x and y"
   (charms:move-cursor charms:*standard-window*
-		      (+ x (car offset))
-		      (+ y (cdr offset)))
+		      x
+		      y)
   (charms:write-string-at-cursor charms:*standard-window* str)
   (refresh))
 
