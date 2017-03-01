@@ -25,7 +25,7 @@
     (io:draw-string (format nil "Earth: ~A / ~A %" (car earth) (cdr earth)) 0 8 offset)
     (io:draw-string (format nil "Air:   ~A / ~A %" (car air)   (cdr air))   0 9 offset)))
 
-(defmethod char->move ((player player) char level)
+(defmethod char->move ((player player) char level placeholder monsters)
   "Call move on player by appropriate x-mod, y-mod"
   (let ((x-mod 0)
 	(y-mod 0))
@@ -49,13 +49,13 @@
       ((#\n)     (progn (incf x-mod)   ; right
 			(incf y-mod)))); up
     
-    (movable:move player x-mod y-mod level)))
+    (movable:move player x-mod y-mod level player monsters)))
 
 (defmethod curse ((player player))
   (io:draw-string "Woundikins!!!" 0 1)
   (io:refresh))
 
-(defmethod control ((player player) level)
+(defmethod control ((player player) level placeholder monsters)
   "Control player by keyboard"
   (let ((status :continue)
 	(ch (io:get-char)))
@@ -75,5 +75,5 @@
       ((#\e)      (setf status :error))
 
       ;; Movement
-      ((#\h #\j #\l #\k #\z #\y #\u #\n #\b) (char->move player ch level)))
+      ((#\h #\j #\l #\k #\z #\y #\u #\n #\b) (char->move player ch level player monsters)))
     status))

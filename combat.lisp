@@ -14,6 +14,8 @@
 
 (in-package combat)
 
+(defvar report-offset (io:new-offset 0 23)) ;; refactor this shit
+
 (defclass combatant ()
   ((health :initarg :health
 	   :accessor health)
@@ -47,7 +49,12 @@
       (unless (> raw-dmg 0)
 	(setf raw-dmg 0))
 
-      (decf (health defender) (+ raw-dmg fire-dmg water-dmg earth-dmg air-dmg)))))
+      (decf (health defender) (+ raw-dmg fire-dmg water-dmg earth-dmg air-dmg))
+
+      (io:draw-string (format nil "A hit b for ~A"
+			      (+ raw-dmg fire-dmg water-dmg earth-dmg air-dmg))
+		      0 0 report-offset)
+      (io:refresh))))
 
 (defmethod dead? ((combatant combatant))
   (< (health combatant) 0))
