@@ -37,8 +37,8 @@
   (io:draw-string "Woundikins!!!" 0 1)
   (io:refresh))
 
-(defmethod control ((player player) level)
-  "Control player by keyboard"
+(defmethod control ((player player) level
+		    "Control player by keyboard")
   (let ((status :continue)
 	(ch (io:get-char)))
     (case ch

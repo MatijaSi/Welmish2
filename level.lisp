@@ -3,6 +3,12 @@
   (:export level
 	   level-tile
 
+	   blocked?
+	   
+	   grid
+	   height
+	   width
+
 	   draw
 	   
 	   make-ground-tile
@@ -12,10 +18,10 @@
 	   map-level-coords
 
 	   map-level-row
-	   map-level-row/coords
+	   map-level-row\coords
 
 	   map-level-column
-	   map-level-column/coords
+	   map-level-column\coords
 	   
 	   get-tile))
 

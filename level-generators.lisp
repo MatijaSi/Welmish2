@@ -12,17 +12,17 @@
 			      :h height
 			      :grid (make-array (list width height)
 						:initial-element 0))))
-    (map-level-coords #'(lambda (e x y)
-			  (setf (aref (grid level) x y)
-				(funcall tile-generator x y)))
-		      level)
+    (level:map-level-coords #'(lambda (e x y)
+				(setf (aref (level:grid level) x y)
+				      (funcall tile-generator x y)))
+			    level)
     level))
 
 (defun empty-level-generate (width height)
   "A level composed of ground tiles"
-  (simple-level-metagenerator #'(lambda (x y) (level:make-ground-tile x y))
+  (impassable-border-generate (simple-level-metagenerator #'(lambda (x y) (level:make-ground-tile x y))
 			      width
-			      height))
+			      height)))
 
 (defun random-level-generate (width height)
   "A level composed of ground and wall tiles randomly intermixed"
@@ -35,20 +35,21 @@
 
 (defmethod impassable-border-generate ((level level:level))
   "Add walls to level border"
-  (level:map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						    (make-wall-tile x y)))
+  (level:map-level-row\coords #'(lambda (x y) (setf (aref (level:grid level) x y)
+						    (level:make-wall-tile x y)))
 			      level
 			      0)
-  (level:map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						    (make-wall-tile x y)))
+  (level:map-level-row\coords #'(lambda (x y) (setf (aref (level:grid level) x y)
+						    (level:make-wall-tile x y)))
 			      level
-			      (- (height level) 1))
-  (level:map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						       (make-wall-tile x y)))
+			      (- (level:height level) 1))
+  
+  (level:map-level-column\coords #'(lambda (x y) (setf (aref (level:grid level) x y)
+						       (level:make-wall-tile x y)))
 				 level
 			0)
-  (level:map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
-						       (make-wall-tile x y)))
+  (level:map-level-column\coords #'(lambda (x y) (setf (aref (level:grid level) x y)
+						       (level:make-wall-tile x y)))
 				 level
-				 (- (width level) 1))
+				 (- (level:width level) 1))
   level)

@@ -1,17 +1,20 @@
 (defpackage drawable
   (:use :cl)
   (:export tile
-	   draw))
+	   draw
 
-(in-package:drawable)
+	   x
+	   y))
+
+(in-package drawable)
 
 (defclass tile ()
-  ((x     :reader   x
-          :initarg :x)
-   (y     :reader   y
-          :initarg :y)
-   (image :reader   image
-	  :initarg :image)))
+  ((x     :accessor   x
+          :initarg   :x)
+   (y     :accessor   y
+          :initarg   :y)
+   (image :reader     image
+	  :initarg   :image)))
 
 (defmethod draw ((tile tile) &optional (offset (cons 0 0)))
   "Draw tile to window"
