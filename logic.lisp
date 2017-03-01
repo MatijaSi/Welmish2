@@ -11,9 +11,9 @@
 (defvar player (make-instance 'player:player :x 5 :y 5 :image #\@
 			      :raw (cons 5 3) :fire (cons 5 50) :water (cons 5 50)
 			      :air (cons 5 50) :earth (cons 5 50) :health 50)) 
-(defvar level (level-generators:empty-level-generate 40 15))
+(defvar level (level-generators:empty-level-generate 58 21))
 (defvar level-offset (io:new-offset 0 2))
-(defvar stats-offset (io:new-offset 60 0))
+(defvar stats-offset (io:new-offset 59 0))
 
 (defun interact-state ()
   (if (combat:dead? player)
