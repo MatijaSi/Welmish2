@@ -3,6 +3,16 @@
   (:export tile
 	   draw
 
+	   level
+	   level-tile
+	   make-ground-tile
+	   make-wall-tile
+	   empty-level-generate
+	   random-level-generate
+	   map-level
+	   map-level-coords
+	   get-tile
+
 	   mover
 	   move
 
@@ -19,114 +29,122 @@
    (image :reader   image
 	  :initarg :image)))
 
-#|
-(defclass map-tile ((tile))
-  ((blocked? :reader blocked?
+(defmethod draw ((tile tile) &optional (offset (cons 0 0)))
+  "Draw tile to window"
+  (io:draw-char (image tile) (x tile) (y tile) offset))
+
+(defclass level-tile (tile)
+  ((blocked? :reader   blocked?
 	     :initarg :blocked?)))
-|#
-(defmethod draw ((tile tile))
-  "Draw tile to *standard-window*"
-  (io:draw-char (image tile) (x tile) (y tile)))
-#|
-(defclass map ()
-  ((grid    :initarg :grid
-	    :accessor grid)
-   (rows    :initarg :rows
-	    :reader   rows)
-   (columns :initarg :columns
-	    :reader   columns)))
 
-(defun map-new (rows columns)
-  "Return rows x columns map"
-  (let* ((map (make-instance 'map :rows rows :columns columns))
-	 (array (make-array (list rows columns) :initial-element 0)))
-    (setf (grid map) array)
-    (grid-map-coordinated #'(lambda (a row column)
-			      (make-instance 'map-tile
-					     :x row
-					     :y column
-					     :blocked? nil)) grid)))
+;; A game map class
+(defclass level ()
+  ((height :reader   height
+	   :initarg :h)
+   (width  :reader   width
+	   :initarg :w)
+   (grid   :accessor grid
+	   :initarg :grid)))
 
-(defun map-make (rows columns array)
-  "Return map with grid equal to array"
-  (make-instance 'map :rows rows :columns columns :grid array))
+(defun make-ground-tile (x y)
+  (make-instance 'level-tile :x x :y y :blocked? nil :image #\.))
 
-(defmethod map-map (fun (map map))
-  "Apply fun to all elements of map and collect them in new map"
-  (let* ((rows (rows map))
-	 (columns (columns map))
-	 (result-array (make-array (list rows columns)))
-	 (array (grid map)))
-    (do ((row 0 (+ row 1)))
-	((= row rows) (map-make rows columns result-array))
-      (do ((column 0 (+ column 1)))
-	  ((= column columns) nil)
-	(setf (aref result-array row column)
-	      (funcall fun (aref array row column)))))))
+(defun make-wall-tile (x y)
+  (make-instance 'level-tile :x x :y y :blocked? t :image #\#))
 
-(defmethod map-map-coordinated (fun (map map))
-  "Apply fun to all elements of map and collect them in new map.
-Fun must take three arguments, first one element, second row and third column."
-  (let* ((rows (rows map))
-	 (columns (columns map))
-	 (result-array (make-array (list rows columns)))
-	 (array (grid map)))
-    (do ((row 0 (+ row 1)))
-	((= row rows) (map-make rows columns result-array))
-      (do ((column 0 (+ column 1)))
-	  ((= column columns) nil)
-	(setf (aref result-array row column)
-	      (funcall fun (aref array row column) row column))))))
+(defun simple-level-metagenerator (tile-generator width height)
+  "A workhorse for simple level generators"
+  (let ((level (make-instance 'level
+			      :w width
+			      :h height
+			      :grid (make-array (list width height)
+						:initial-element 0))))
+    (map-level-coords #'(lambda (e x y)
+			  (setf (aref (grid level) x y)
+				(funcall tile-generator x y)))
+		      level)
+    level))
 
-(defmethod map-get (x y (map map))
-  "Get x,y cell of grid"
-  (aref (grid map) x y))
+(defun empty-level-generate (width height)
+  "A level composed of ground tiles"
+  (simple-level-metagenerator #'(lambda (x y) (make-ground-tile x y))
+			      width
+			      height))
 
-(defmethod map-row (x (map map))
-  "Return all cells with x"
-  (let ((limit (columns map))
-	(list '()))
+(defun random-level-generate (width height)
+  "A level composed of ground and wall tiles randomly intermixed"
+  (impassable-border-generate (simple-level-metagenerator #'(lambda (x y)
+							      (if (> (random 2) 0)
+								  (make-ground-tile x y)
+								  (make-wall-tile x y)))
+							  width
+							  height)))
+
+(defmethod impassable-border-generate ((level level))
+  "Add walls to level border"
+  (map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
+					      (make-wall-tile x y)))
+			level
+			0)
+  (map-level-row\coords #'(lambda (x y) (setf (aref (grid level) x y)
+					      (make-wall-tile x y)))
+			level
+			(- (height level) 1))
+  (map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						 (make-wall-tile x y)))
+			   level
+			0)
+  (map-level-column\coords #'(lambda (x y) (setf (aref (grid level) x y)
+						 (make-wall-tile x y)))
+			   level
+			   (- (width level) 1))
+  level)
+
+(defmethod map-level (fun (level level))
+  "Apply fun to all elements of level"
+  (do ((x 0 (+ x 1)))
+      ((= x (width level)) level)
     (do ((y 0 (+ y 1)))
-	((= y limit) (reverse list))
-      (push (map-get x y map) list))))
+	((= y (height level)) 'done)
+      (funcall fun (aref (grid level) x y)))))
 
-(defmethod map-rows ((map map))
-  "Return list of rows"
-  (let ((limit (rows map))
-	(result '()))
-    (do ((x 0 (+ x 1)))
-	((= x limit) (reverse result))
-      (push (map-row x map) result))))
+(defmethod map-level-row (fun (level level) y)
+  "Apply fun to all elements of row y"
+  (do ((x 0 (+ x 1)))
+      ((= x (width level)) level)
+    (funcall fun (get-tile level x y))))
 
-(defmethod map-column (y (map map))
-  "Return all cells with y"
-  (let ((limit (rows map))
-	(list '()))
-    (do ((x 0 (+ x 1)))
-	((= x limit) list)
-      (push (map-get x y map) list))))
+(defmethod map-level-row\coords (fun (level level) y)
+  "Apply fun to all coords of row y"
+  (do ((x 0 (+ x 1)))
+      ((= x (width level)) level)
+    (funcall fun x y)))
 
-(defmethod map-all ((map map))
-  "Return all cells of map"
-  (let ((rows (rows map))
-	(columns (columns map))
-	(list '()))
-    (do ((x 0 (+ x 1)))
-	((= x rows) list)
-      (do ((y 0 (+ y 1)))
-	  ((= y columns) nil)
-	(push (map-get x y map) list)))))
+(defmethod map-level-column (fun (level level) x)
+  "Apply fun to all elements of column x"
+  (do ((y 0 (+ y 1)))
+      ((= y (height level)) level)
+    (funcall fun (get-tile level x y))))
 
-(defmethod map-random ((map map))
-  "Return random cell from map"
-  (let ((y (random (columns map)))
-	(x (random (rows map))))
-    (map-get x y grid)))
+(defmethod map-level-column\coords (fun (level level) x)
+  "Apply fun to all coords of column x"
+  (do ((y 0 (+ y 1)))
+      ((= y (height level)) level)
+    (funcall fun x y)))
 
-(defmethod map-surface ((map map))
-  "Return rows * columns of map"
-  (* (rows map) (columns map)))
-|#
+(defmethod map-level-coords (fun (level level))
+  "Apply fun to all elements of level, pass it their coords too"
+  (do ((x 0 (+ x 1)))
+      ((= x (width level)) level)
+    (do ((y 0 (+ y 1)))
+	((= y (height level)) 'done)
+      (funcall fun (aref (grid level) x y) x y))))
+
+(defmethod get-tile ((level level) x y)
+  (aref (grid level) x y))
+
+(defmethod draw ((level level) &optional (offset (cons 0 0)))
+  (map-level #'(lambda (tile) (draw tile offset)) level))
 
 (defclass mover (tile)
   ((x :accessor x
@@ -134,14 +152,17 @@ Fun must take three arguments, first one element, second row and third column."
    (y :accessor y
       :initarg :y)))
 
-(defmethod move ((mover mover) x-mod y-mod)
+(defmethod move ((mover mover) x-mod y-mod level)
   "Move mover for x-mod in x and for y-mod in y"
-  (incf (x mover) x-mod)
-  (incf (y mover) y-mod))
+  (let ((new-x (+ (x mover) x-mod))
+	(new-y (+ (y mover) y-mod)))
+    (unless (blocked? (get-tile level new-x new-y))
+      (setf (x mover) new-x)
+      (setf (y mover) new-y))))
 
 (defclass player (mover) ())
 
-(defmethod char->move ((player player) char)
+(defmethod char->move ((player player) char level)
   "Call move on player by appropriate x-mod, y-mod"
   (let ((x-mod 0)
 	(y-mod 0))
@@ -165,13 +186,13 @@ Fun must take three arguments, first one element, second row and third column."
       ((#\n)     (progn (incf x-mod)   ; right
 			(incf y-mod)))); up
     
-    (move player x-mod y-mod)))
+    (move player x-mod y-mod level)))
 
 (defmethod curse ((player player))
   (io:draw-string "Woundikins!!!" 0 1)
   (io:refresh))
 
-(defmethod control ((player player))
+(defmethod control ((player player) level)
   "Control player by keyboard"
   (let ((status :continue)
 	(ch (io:get-char)))
@@ -187,6 +208,9 @@ Fun must take three arguments, first one element, second row and third column."
 		   (curse player)
 		   (setf status :repeat)))
 
+      ;; Test command for error -- err command
+      ((#\e)      (setf status :error))
+
       ;; Movement
-      ((#\h #\j #\l #\k #\z #\y #\u #\n #\b) (char->move player ch)))
+      ((#\h #\j #\l #\k #\z #\y #\u #\n #\b) (char->move player ch level)))
     status))

@@ -1,11 +1,9 @@
 (defpackage io
   (:use :cl :iterate)
-  (:export standard-window
-	   new-window
-	   remove-window
-
-	   draw-char
+  (:export draw-char
 	   draw-string
+
+	   new-offset
 
 	   with-colour
 	   +yellow-on-black+
@@ -19,32 +17,24 @@
 
 (in-package io)
 
-;;; Windows
-
-;; Default window
-(defun standard-window ()
-  "Return standard window"
-  charms:*standard-window*)
-
-(defun new-window (x y h w)
-  "Make a new window wide w, high h, with top left corner in x,y"
-  (charms:make-window w h x y))
-
-(defun remove-window (window)
-  "Delete window"
-  (charms:destroy-window window))
+;;; Offsetted output
+(defun new-offset (x y) (cons x y))
 
 ;;; Output
 
-(defun draw-char (char x y &optional (window charms:*standard-window*))
+(defun draw-char (char x y &optional (offset (cons 0 0)))
   "Put char to *standard-window* at coordinates x and y"
-  (charms:move-cursor window x y)
-  (charms:write-char-at-cursor window char))
+  (charms:move-cursor charms:*standard-window*
+		      (+ x (car offset))
+		      (+ y (cdr offset)))
+  (charms:write-char-at-cursor charms:*standard-window* char))
 
-(defun draw-string (str x y &optional (window charms:*standard-window*))
+(defun draw-string (str x y &optional (offset (cons 0 0)))
   "Put string to *standard-window* at coordinates x and y"
-  (charms:move-cursor window x y)
-  (charms:write-string-at-cursor window str)
+  (charms:move-cursor charms:*standard-window*
+		      (+ x (car offset))
+		      (+ y (cdr offset)))
+  (charms:write-string-at-cursor charms:*standard-window* str)
   (refresh))
 
 ;;; Coloring output (DOES NOT WORK)
@@ -60,17 +50,17 @@
 
 ;;; Window handling
 
-(defun clear (&optional (window charms:*standard-window*))
-  (charms:clear-window window))
+(defun clear ()
+  (charms:clear-window charms:*standard-window*))
 
-(defun refresh (&optional (window charms:*standard-window*))
-  (charms:refresh-window window))
+(defun refresh ()
+  (charms:refresh-window charms:*standard-window*))
 
 ;;; Input
 
-(defun get-char (&optional (window charms:*standard-window*))
+(defun get-char ()
   "Get char from input"
-  (charms:get-char window))
+  (charms:get-char charms:*standard-window*))
 
 ;;; Initialization and deinitialization
 
