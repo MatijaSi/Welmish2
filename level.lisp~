@@ -1,0 +1,11 @@
+(defpackage level
+  (:use :cl)
+  (:export level
+	   level-tile
+	   make-ground-tile
+	   make-wall-tile
+	   map-level
+	   map-level-coords
+	   get-tile))
+
+(in-package level)
