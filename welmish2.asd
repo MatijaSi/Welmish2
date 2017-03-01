@@ -14,6 +14,7 @@
 		 (:file "level")
 		 (:file "level-generators")
 		 (:file "movable")
+		 (:file "combat")
 		 (:file "player")
 		 (:file "logic")
 		 (:file "welmish")))
