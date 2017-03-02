@@ -18,4 +18,5 @@
 		 (:file "player")
 		 (:file "monsters")
 		 (:file "logic")
-		 (:file "welmish")))
+		 (:file "welmish"))
+    )
