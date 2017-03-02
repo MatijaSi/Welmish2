@@ -1,5 +1,26 @@
 (defpackage io
-  (:use :cl :ncurses))
+  (:use :cl :ncurses)
+  (:export :with-io
+
+	   :get-char
+
+	   :draw-char
+	   :draw-string
+	   :draw-format
+
+	   :clear
+	   :refresh
+	   
+	   :with-colour
+
+	   :+black+
+	   :+white+
+	   :+yellow+
+	   :+cyan+
+	   :+green+
+	   :+blue+
+	   :+red+
+	   :+magenta+))
 
 (in-package io)
 

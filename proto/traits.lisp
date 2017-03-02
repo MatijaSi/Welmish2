@@ -21,7 +21,7 @@
 	   has-ai-hunting
 	   has-ai-scaredy
 	   
-	   has-combat-attributers
+	   has-combat-attributes
 	   can-attack
 	   
 	   has-id))
