@@ -3,13 +3,17 @@
   (:export :with-io
 
 	   :get-char
+	   :any-key
 
 	   :draw-char
 	   :draw-string
+	   :draw-strings
 	   :draw-format
 
 	   :clear
 	   :refresh
+
+	   :with-tabula-rasa
 	   
 	   :with-colour
 
@@ -61,6 +65,12 @@ Waits for user input.
 Takes no arguments, returns character."
   (code-char (%getch)))
 
+(defun any-key ()
+  "Wait until any key is pressed,
+then return it's code.
+Alias for get-char"
+  (get-char))
+
 ;;; Output
 
 (defun draw-string (string x y)
@@ -69,6 +79,16 @@ Arguments are string, x and y coordinates.
 String will be drawn as it is, beginning at x,y coords.
 Returns no (useful) output."
   (%mvaddstr y x string))
+
+(defun draw-strings (x y &rest strings)
+  "Draw strings one per row.
+First begins on x, y.
+Return are coordinates under beginning of last strings in form (x y)"
+  (if (null strings)
+      (list x y)
+      (do-list (string strings (list x y))
+	(draw-string x y)
+	(incf y))))
 
 (defun draw-char (char x y)
   "Draw char to screen.
@@ -96,6 +116,12 @@ Takes no arguments, returns no (useful) output."
   "Flushes changes to screen.
 Takes no arguments, returns no (useful) output:"
   (%refresh))
+
+(defmacro with-tabula-rasa (&rest body)
+  "Precede body with call to clear, after it call refresh"
+  `(progn (clear)
+	  ,@body
+	  (refresh)))
 
 ;;; Colors
 
