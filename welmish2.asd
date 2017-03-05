@@ -5,7 +5,7 @@
 
     :version "0.0.3"
 
-    :depends-on (:croatoan)
+    :depends-on (:ncurses)
 
     :serial t
 

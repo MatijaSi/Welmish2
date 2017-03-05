@@ -86,8 +86,8 @@ First begins on x, y.
 Return are coordinates under beginning of last strings in form (x y)"
   (if (null strings)
       (list x y)
-      (do-list (string strings (list x y))
-	(draw-string x y)
+      (dolist (string strings (list x y))
+	(draw-string string x y)
 	(incf y))))
 
 (defun draw-char (char x y)

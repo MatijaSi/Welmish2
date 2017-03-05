@@ -38,7 +38,10 @@ then go to draw-state"
 
 (defun draw-state ()
   "Just a placeholder for now"
-  (interact-state))
+  (io:with-tabula-rasa
+      (io:with-colour io:+yellow+
+	(io:draw-char #\@ 5 5))
+    (interact-state)))
 
 (defun interact-state ()
   "Placeholder too"
@@ -53,4 +56,4 @@ then go to draw-state"
       (io:draw-strings 0 0
 		       "Thanks for playing!"
 		       "Press any key"))
-  (any-key))
+  (io:any-key))
