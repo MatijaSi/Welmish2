@@ -1,67 +1,137 @@
 (defpackage io
-  (:use :cl :iterate)
-  (:export draw-char
-	   draw-string
+  (:use :cl :ncurses)
+  (:export :with-io
 
-	   with-colour
-       
-	   clear
-	   refresh
+	   :get-char
+
+	   :draw-char
+	   :draw-string
+	   :draw-format
+
+	   :clear
+	   :refresh
 	   
-	   get-char
-	   
-	   with-io))
+	   :with-colour
+
+	   :+black+
+	   :+white+
+	   :+yellow+
+	   :+cyan+
+	   :+green+
+	   :+blue+
+	   :+red+
+	   :+magenta+))
 
 (in-package io)
 
-;;; Output
+;;; Initialization and finalization
 
-(defun draw-char (char x y)
-  "Put char to *standard-window* at coordinates x and y"
-  (charms:move-cursor charms:*standard-window*
-		      x
-		      y)
-  (charms:write-char-at-cursor charms:*standard-window* char))
+(defun initialize ()
+  "Prepare screen for drawing. 
+It must be evald before other io functions.
+Use with-io macro to guarantee that.
+Takes no arguments, returns no (useful) output."
+  (%initscr)
+  (%noecho)
+  (%start-color)
+  (prepare-colours)
+  (clear))
 
-(defun draw-string (str x y)
-  "Put string to *standard-window* at coordinates x and y"
-  (charms:move-cursor charms:*standard-window*
-		      x
-		      y)
-  (charms:write-string-at-cursor charms:*standard-window* str)
-  (refresh))
+(defun finalize ()
+  "Clean the screen after drawing and close it.
+Call it only after other io functions.
+Use with-io macro to guarantee that.
+Takes no arguments, returns no (useful) output."
+  (clear)
+  (%endwin))
 
-;;; Coloring output (DOES NOT WORK)
-
-(defconstant +yellow-on-black+ 1)
-(charms/ll:init-pair +yellow-on-black+
-		     charms/ll:COLOR_RED charms/ll:COLOR_BLUE)
-
-(defmacro with-colour (colour &rest body)
-  `(progn (charms/ll:attron (charms/ll:color-pair ,colour))
+(defmacro with-io (&rest body)
+  "Run arguments with initialized screen.
+After they are evald screen is cleaned up and closed.
+Equivalent to running initialize before arguments and finalize after it.
+Takes any number of arguments, has no (useful) outputs."
+  `(progn (initialize)
 	  ,@body
-	  (charms/ll:attroff (charms/ll:color-pair ,colour))))
-
-;;; Window handling
-
-(defun clear ()
-  (charms:clear-window charms:*standard-window*))
-
-(defun refresh ()
-  (charms:refresh-window charms:*standard-window*))
-
+	  (finalize)))
 ;;; Input
 
 (defun get-char ()
-  "Get char from input"
-  (charms:get-char charms:*standard-window*))
+  "Return char from screen input.
+Waits for user input.
+Takes no arguments, returns character."
+  (code-char (%getch)))
 
-;;; Initialization and deinitialization
+;;; Output
 
-(defmacro with-io (&rest body)
-  "Run body with initialized io, safely close it afterwards"
-  `(charms:with-curses ()
-     (charms:disable-echoing)
-     (charms:enable-raw-input :interpret-control-characters t)
-     (charms:disable-non-blocking-mode charms:*standard-window*)
-     ,@body))
+(defun draw-string (string x y)
+  "Draw string to screen.
+Arguments are string, x and y coordinates.
+String will be drawn as it is, beginning at x,y coords.
+Returns no (useful) output."
+  (%mvaddstr y x string))
+
+(defun draw-char (char x y)
+  "Draw char to screen.
+Arguments are char, x and y coordinates.
+Char will be drawn as it is on x,y coords.
+Returns no (useful) output."
+  (%mvaddch y x (char-code char)))
+
+(defun draw-format (x y &rest format-args)
+  "Draw formated string to screen.
+Arguments are x,y and format-args.
+String returned from (apply #'format (cons nil format-args)) will
+be drawn to screen, beginning at x,y coords.
+Returns no (useful) output"
+  (%mvaddstr y x (apply #'format (cons nil format-args))))
+
+;;; Misc Output
+
+(defun clear ()
+  "Clears screen.
+Takes no arguments, returns no (useful) output."
+  (%clear))
+
+(defun refresh ()
+  "Flushes changes to screen.
+Takes no arguments, returns no (useful) output:"
+  (%refresh))
+
+;;; Colors
+
+(defconstant +black+   1)
+(defconstant +red+     2)
+(defconstant +green+   3)
+(defconstant +yellow+  4)
+(defconstant +blue+    5)
+(defconstant +magenta+ 6)
+(defconstant +cyan+    7)
+(defconstant +white+   0)
+
+(defun prepare-colours ()
+  "Initialize colour pairs for drawing on screen.
+Don't use directly, it's contained in initialize."
+ (mapcar #'(lambda (pair color)
+      (%init-pair pair color %COLOR_BLACK))
+  (list +black+ +red+     +green+ +yellow+
+	+blue+  +magenta+ +cyan+  +white+)
+  (list %COLOR_BLACK %COLOR_RED     %COLOR_GREEN %COLOR_YELLOW
+	%COLOR_BLUE  %COLOR_MAGENTA %COLOR_CYAN  %COLOR_WHITE)))
+
+(defun colour-set (pair)
+  "Use colour described by pair in following io operations.
+Takes colour pair for argument, has no (useful) output."
+  (%attron (%color-pair pair)))
+
+(defun colour-unset (pair)
+  "Stop using colour described by pair for io operations
+Takes colour pair, returns nothing useful."
+  (%attroff (%color-pair pair)))
+
+(defmacro with-colour (colour &rest body)
+  "Takes at least one argument, has no useful output.
+First argument is colour, which will be used with io operations in
+other arguments."
+  `(progn (colour-set ,colour)
+	  ,@body
+	  (colour-unset ,colour)))
