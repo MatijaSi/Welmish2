@@ -83,10 +83,16 @@
 (defclass has-combat-attributes ()
   ((health   :accessor health
 	     :initarg :health)
-   (damages  :accessor damages
-	     :initarg :damages)
-   (defences :accessor defences
-             :initarg :defences)))
+   (fire     :accessor fire
+	     :initarg :fire)
+   (water    :accessor water
+	     :initarg :water)
+   (earth    :accessor earth
+	     :initarg :earth)
+   (sky      :accessor sky
+	     :initarg :sky)
+   (raw      :accessor raw
+	     :initarg :raw)))
 
 (defclass can-attack (has-combat-attributes) ())
 
