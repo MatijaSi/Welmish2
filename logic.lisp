@@ -12,6 +12,7 @@
 ;;;; game loop as state machine was inspired by silt2
 (in-package logic)
 
+
 (defun init-state ()
   "First state, give player a nice welcome message,
 then go to help-state"
@@ -45,7 +46,7 @@ then go to draw-state"
 
 (defun interact-state ()
   "Placeholder too"
-  (case (io:get-char)
+  (case ()
     ((#\H) (help-state))
     ((#\q #\Q) (quit-state))
     (otherwise (draw-state))))
